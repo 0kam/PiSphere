@@ -1,0 +1,10 @@
+[Unit]
+Description=Capture a pair of PiSphere images
+
+[Service]
+User=USER
+Type=oneshot
+ExecStart=/usr/bin/bash /home/USER/PiSphere/shs/capture_image.sh
+
+[Install]
+WantedBy=multi-user.target

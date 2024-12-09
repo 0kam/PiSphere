@@ -1,0 +1,4 @@
+shs/run.sh
+service/pisphere.service
+service/pisphere.timer
+__pycache__

@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# PiSphere Run Script
+
+# User variables
+USER=USER
+START_TIME=START_TIME
+END_TIME=END_TIME
+INTERVAL_MINUTES=INTERVAL_MINUTES
+
+# Navigate to the PiSphere directory
+cd /home/$USER/PiSphere
+
+# Function to check if current time is within capture window
+is_within_capture_window() {
+    current_time=$(date +%H:%M)
+    if [[ "$START_TIME" < "$END_TIME" ]]; then
+        # Capture window does not span midnight
+        if [[ "$current_time" > "$START_TIME" && "$current_time" < "$END_TIME" ]]; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        # Capture window spans midnight
+        if [[ "$current_time" > "$START_TIME" || "$current_time" < "$END_TIME" ]]; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+# Function to set RTC wake alarm
+set_wake_alarm() {
+    local wake_time_epoch=$1
+    echo $wake_time_epoch > /sys/class/rtc/rtc0/wakealarm
+}
+
+# Check if within capture window
+if is_within_capture_window; then
+    # Capture the image
+    python ./scripts/capture_image.py
+
+    # Calculate the next capture time
+    next_capture_time=$(date -d "+$INTERVAL_MINUTES minutes" +%s)
+
+    # Convert START_TIME and END_TIME to epoch seconds for today
+    today=$(date +%Y-%m-%d)
+    start_epoch=$(date -d "$today $START_TIME" +%s)
+    end_epoch=$(date -d "$today $END_TIME" +%s)
+    current_epoch=$(date +%s)
+
+    # Adjust end_epoch if capture window spans midnight
+    if [[ "$START_TIME" > "$END_TIME" ]]; then
+        if [[ "$current_epoch" < "$end_epoch" ]]; then
+            end_epoch=$(date -d "yesterday $END_TIME" +%s)
+        else
+            end_epoch=$(date -d "today $END_TIME" +%s)
+        fi
+    fi
+
+    # Determine if next capture is within the capture window
+    if [[ "$next_capture_time" -le "$end_epoch" ]]; then
+        # Set RTC wake alarm to next capture time minus 1 minute
+        wake_alarm=$((next_capture_time - 60))
+    else
+        # Set RTC wake alarm to next day's start time minus 1 minute
+        wake_alarm=$(date -d "tomorrow $START_TIME" +%s)
+        wake_alarm=$((wake_alarm - 60))
+    fi
+else
+    # Outside capture window, set RTC wake alarm to next start time minus 1 minute
+    wake_alarm=$(date -d "today $START_TIME" +%s)
+    current_epoch=$(date +%s)
+    if [[ "$current_epoch" -ge "$wake_alarm" ]]; then
+        wake_alarm=$(date -d "tomorrow $START_TIME" +%s)
+    fi
+    wake_alarm=$((wake_alarm - 60))
+fi
+
+# Set the RTC wake alarm
+set_wake_alarm $wake_alarm
+
+# Shutdown the system
+/usr/sbin/telinit 0
