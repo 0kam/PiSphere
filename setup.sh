@@ -100,11 +100,18 @@ create_cron_jobs() {
     SCRIPTS_DIR="$(dirname "$SCRIPT_PATH")/shs"
 
     RUN_SCRIPT="$SCRIPTS_DIR/run.sh"
+    LOG_FILE="$SCRIPTS_DIR/cron.log"
 
     # run.sh スクリプトが存在し、実行可能であることを確認
     if [ ! -x "$RUN_SCRIPT" ]; then
         log "Run script $RUN_SCRIPT does not exist or is not executable. Exiting."
         exit 1
+    fi
+
+    # ログファイルの存在を確認し、存在しない場合は作成
+    if [ ! -f "$LOG_FILE" ]; then
+        touch "$LOG_FILE"
+        log "Created log file at $LOG_FILE"
     fi
 
     # 現在の crontab をバックアップ
@@ -140,8 +147,8 @@ create_cron_jobs() {
         hour_fmt=$(printf "%02d" "$hour")
         minute_fmt=$(printf "%02d" "$minute")
 
-        # cron ジョブを追加
-        echo "$minute_fmt $hour_fmt * * * $RUN_SCRIPT # PiSphere_Run_Script" >> mycron_backup
+        # cron ジョブを追加（ログファイルへのリダイレクトを追加）
+        echo "$minute_fmt $hour_fmt * * * $RUN_SCRIPT >> $LOG_FILE 2>&1 # PiSphere_Run_Script" >> mycron_backup
 
         # インターバル分を加算
         current_min=$((current_min + INTERVAL_MINUTES))
@@ -150,7 +157,7 @@ create_cron_jobs() {
     # 新しい crontab をインストール
     crontab mycron_backup
     rm mycron_backup mycron_temp 2>/dev/null || true
-    log "Added cron jobs for PiSphere_Run_Script."
+    log "Added cron jobs for PiSphere_Run_Script with logging to $LOG_FILE."
 }
 
 # ユーザー入力を取得する関数

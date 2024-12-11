@@ -34,7 +34,7 @@ is_within_capture_window() {
 # RTCアラームを設定する関数
 set_wake_alarm() {
     local wake_time_epoch=$1
-    echo $wake_time_epoch > /sys/class/rtc/rtc0/wakealarm
+    echo $wake_time_epoch | sudo tee /sys/class/rtc/rtc0/wakealarm > /dev/null
 }
 
 # 撮影ウィンドウ内かどうかを確認
@@ -83,4 +83,4 @@ fi
 set_wake_alarm $wake_alarm
 
 # システムをシャットダウン
-/sbin/shutdown -h now
+sudo /sbin/shutdown -h now
