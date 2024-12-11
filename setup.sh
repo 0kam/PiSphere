@@ -1,42 +1,40 @@
 #!/bin/bash
 
 # =========================================
-# Initial Setup Script - Steps 1, 2 & 3
+# Initial Setup Script - Cron-based Scheduling
 # Created on: 2024-12-09
 # =========================================
 
-# Error Handling
+# エラーハンドリング
 set -e
 
-# Define color codes (Optional)
+# カラーコードの定義（オプション）
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Log Function with Colors
+# ログ関数（カラー付き）
 log() {
     echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
 }
 
-# Function to display the PiSphere logo with Colors
+# PiSphereのロゴをカラー付きで表示する関数
 display_logo() {
     echo -e "${GREEN}"
     cat << "EOF"
-    ______   _   ______         _
-   (_____ \ (_) / _____)       | |
-    _____) ) _ ( (____   ____  | |__   _____   ____  _____
-   |  ____/ | | \____ \ |  _ \ |  _ \ | ___ | / ___)| ___ |
-   | |      | | _____) )| |_| || | | || ____|| |    | ____|
-   |_|      |_|(______/ |  __/ |_| |_||_____)|_|    |_____)
-                        |_|
-
-Welcome to PiSphere Setup!
+        ______   _   ______         _
+       (_____ \ (_) / _____)       | |
+        _____) ) _ ( (____   ____  | |__   _____   ____  _____
+       |  ____/ | | \____ \ |  _ \ |  _ \ | ___ | / ___)| ___ |
+       | |      | | _____) )| |_| || | | || ____|| |    | ____|
+       |_|      |_|(______/ |  __/ |_| |_||_____)|_|    |_____)
+                            |_|
 EOF
     echo -e "${NC}"
     echo
 }
 
-# Function to display the welcome message with Colors
+# ウェルカムメッセージをカラー付きで表示する関数
 display_welcome_message() {
     echo -e "${GREEN}=========================================${NC}"
     echo -e "${GREEN}   Welcome to the PiSphere Setup Script!${NC}"
@@ -48,191 +46,118 @@ display_welcome_message() {
     echo
 }
 
-# Function to determine the script owner's username
+# スクリプト所有者のユーザー名を取得する関数
 get_script_owner() {
-    # Get the absolute path of the script
+    # スクリプトの絶対パスを取得
     SCRIPT_PATH="$(readlink -f "$0")"
 
-    # Get the owner of the script file
+    # スクリプトファイルの所有者を取得
     EXEC_USER="$(stat -c '%U' "$SCRIPT_PATH")"
 
     log "The script is located in the home directory of user: $EXEC_USER"
 }
 
-# Function to create pisphere.service from template
-create_service_file() {
-    # Define the service directory relative to the script's location
-    SERVICE_DIR="$(dirname "$SCRIPT_PATH")/service"
-
-    # Path to the template and the new service file
-    TEMPLATE_FILE="$SERVICE_DIR/pisphere.service.template"
-    SERVICE_FILE="$SERVICE_DIR/pisphere.service"
-
-    # Check if the template file exists
-    if [ ! -f "$TEMPLATE_FILE" ]; then
-        log "Template file $TEMPLATE_FILE does not exist. Exiting."
-        exit 1
-    fi
-
-    # If the service file exists, delete it
-    if [ -f "$SERVICE_FILE" ]; then
-        log "Service file $SERVICE_FILE already exists. Deleting it."
-        rm "$SERVICE_FILE"
-    fi
-
-    # Copy the template to the service file
-    cp "$TEMPLATE_FILE" "$SERVICE_FILE"
-    log "Copied $TEMPLATE_FILE to $SERVICE_FILE"
-
-    # Replace 'USER' with the actual username
-    sed -i "s/USER/$EXEC_USER/g" "$SERVICE_FILE"
-    log "Replaced 'USER' with '$EXEC_USER' in $SERVICE_FILE"
-
-    # Change ownership to EXEC_USER
-    chown "$EXEC_USER":"$EXEC_USER" "$SERVICE_FILE"
-    log "Changed ownership of $SERVICE_FILE to $EXEC_USER"
-}
-
-# Function to create pisphere.timer from template
-create_timer_file() {
-    # Define the service directory relative to the script's location
-    SERVICE_DIR="$(dirname "$SCRIPT_PATH")/service"
-
-    # Path to the template and the new timer file
-    TEMPLATE_FILE="$SERVICE_DIR/pisphere.timer.template"
-    TIMER_FILE="$SERVICE_DIR/pisphere.timer"
-
-    # Check if the template file exists
-    if [ ! -f "$TEMPLATE_FILE" ]; then
-        log "Template file $TEMPLATE_FILE does not exist. Exiting."
-        exit 1
-    fi
-
-    # If the timer file exists, delete it
-    if [ -f "$TIMER_FILE" ]; then
-        log "Timer file $TIMER_FILE already exists. Deleting it."
-        rm "$TIMER_FILE"
-    fi
-
-    # Copy the template to the timer file
-    cp "$TEMPLATE_FILE" "$TIMER_FILE"
-    log "Copied $TEMPLATE_FILE to $TIMER_FILE"
-
-    # Replace 'START_TIME', 'END_TIME', and 'INTERVAL_MINUTES' with user inputs
-    sed -i "s/START_TIME/$START_TIME/g" "$TIMER_FILE"
-    sed -i "s/END_TIME/$END_TIME/g" "$TIMER_FILE"
-    sed -i "s/INTERVAL_MINUTES/$INTERVAL_MINUTES/g" "$TIMER_FILE"
-    log "Replaced 'START_TIME', 'END_TIME', and 'INTERVAL_MINUTES' in $TIMER_FILE"
-
-    # Change ownership to EXEC_USER
-    chown "$EXEC_USER":"$EXEC_USER" "$TIMER_FILE"
-    log "Changed ownership of $TIMER_FILE to $EXEC_USER"
-}
-
-# Function to create run.sh from template
+# run.sh をテンプレートから作成する関数
 create_run_script() {
-    # Define the scripts directory relative to the script's location
+    # スクリプトの場所に基づいて scripts ディレクトリを定義
     SCRIPTS_DIR="$(dirname "$SCRIPT_PATH")/shs"
 
-    # Path to the template and the new run.sh file
+    # テンプレートファイルと新しい run.sh ファイルのパス
     TEMPLATE_FILE="$SCRIPTS_DIR/run.sh.template"
     RUN_SCRIPT="$SCRIPTS_DIR/run.sh"
 
-    # Check if the template file exists
+    # テンプレートファイルが存在するか確認
     if [ ! -f "$TEMPLATE_FILE" ]; then
         log "Template file $TEMPLATE_FILE does not exist. Exiting."
         exit 1
     fi
 
-    # If the run.sh file exists, delete it
+    # run.sh ファイルが既に存在する場合は削除
     if [ -f "$RUN_SCRIPT" ]; then
         log "Run script $RUN_SCRIPT already exists. Deleting it."
         rm "$RUN_SCRIPT"
     fi
 
-    # Copy the template to the run.sh file
+    # テンプレートを run.sh にコピー
     cp "$TEMPLATE_FILE" "$RUN_SCRIPT"
     log "Copied $TEMPLATE_FILE to $RUN_SCRIPT"
 
-    # Replace placeholders with actual values
-    sed -i "s/USER/$EXEC_USER/g" "$RUN_SCRIPT"
-    sed -i "s/START_TIME/$START_TIME/g" "$RUN_SCRIPT"
-    sed -i "s/END_TIME/$END_TIME/g" "$RUN_SCRIPT"
-    sed -i "s/INTERVAL_MINUTES/$INTERVAL_MINUTES/g" "$RUN_SCRIPT"
+    # プレースホルダーを実際の値で置換
+    sed -i "s/__USER__/$EXEC_USER/g" "$RUN_SCRIPT"
+    sed -i "s/__START_TIME__/$START_TIME/g" "$RUN_SCRIPT"
+    sed -i "s/__END_TIME__/$END_TIME/g" "$RUN_SCRIPT"
+    sed -i "s/__INTERVAL_MINUTES__/$INTERVAL_MINUTES/g" "$RUN_SCRIPT"
     log "Replaced placeholders in $RUN_SCRIPT"
 
-    # Change ownership to EXEC_USER
-    chown "$EXEC_USER":"$EXEC_USER" "$RUN_SCRIPT"
-    log "Changed ownership of $RUN_SCRIPT to $EXEC_USER"
-
-    # Make run.sh executable
+    # run.sh に実行権限を付与
     chmod +x "$RUN_SCRIPT"
     log "Set execute permission for $RUN_SCRIPT"
 }
 
-# Function to create symbolic links for systemd unit files
-create_symlinks() {
-    # Define the service directory relative to the script's location
-    SERVICE_DIR="$(dirname "$SCRIPT_PATH")/service"
+# cron ジョブを作成する関数
+create_cron_jobs() {
+    # スクリプトの場所に基づいて scripts ディレクトリを定義
+    SCRIPTS_DIR="$(dirname "$SCRIPT_PATH")/shs"
 
-    # Define target and link paths
-    SERVICE_TARGET="$SERVICE_DIR/pisphere.service"
-    SERVICE_LINK="/etc/systemd/system/pisphere.service"
+    RUN_SCRIPT="$SCRIPTS_DIR/run.sh"
 
-    TIMER_TARGET="$SERVICE_DIR/pisphere.timer"
-    TIMER_LINK="/etc/systemd/system/pisphere.timer"
-
-    # Create symbolic link for pisphere.service
-    if [ -L "$SERVICE_LINK" ]; then
-        log "Symbolic link $SERVICE_LINK already exists. Removing it."
-        rm "$SERVICE_LINK"
-    elif [ -e "$SERVICE_LINK" ]; then
-        log "File $SERVICE_LINK already exists and is not a symbolic link. Exiting to prevent overwrite."
+    # run.sh スクリプトが存在し、実行可能であることを確認
+    if [ ! -x "$RUN_SCRIPT" ]; then
+        log "Run script $RUN_SCRIPT does not exist or is not executable. Exiting."
         exit 1
     fi
 
-    ln -s "$SERVICE_TARGET" "$SERVICE_LINK"
-    log "Created symbolic link: $SERVICE_LINK -> $SERVICE_TARGET"
+    # 現在の crontab をバックアップ
+    crontab -l > mycron_backup 2>/dev/null || true
 
-    # Create symbolic link for pisphere.timer
-    if [ -L "$TIMER_LINK" ]; then
-        log "Symbolic link $TIMER_LINK already exists. Removing it."
-        rm "$TIMER_LINK"
-    elif [ -e "$TIMER_LINK" ]; then
-        log "File $TIMER_LINK already exists and is not a symbolic link. Exiting to prevent overwrite."
-        exit 1
+    # 既存の PiSphere cron ジョブを削除して重複を防ぐ
+    grep -v 'PiSphere_Run_Script' mycron_backup > mycron_temp || true
+    mv mycron_temp mycron_backup
+
+    # start_time と end_time を分単位に変換
+    IFS=':' read -r START_HOUR START_MIN <<< "$START_TIME"
+    IFS=':' read -r END_HOUR END_MIN <<< "$END_TIME"
+
+    START_TOTAL_MIN=$((10#$START_HOUR * 60 + 10#$START_MIN))
+    END_TOTAL_MIN=$((10#$END_HOUR * 60 + 10#$END_MIN))
+
+    # 撮影ウィンドウが日付をまたぐ場合の処理
+    if [ "$START_TOTAL_MIN" -gt "$END_TOTAL_MIN" ]; then
+        END_TOTAL_MIN=$((END_TOTAL_MIN + 1440)) # 24*60 分を追加
     fi
 
-    ln -s "$TIMER_TARGET" "$TIMER_LINK"
-    log "Created symbolic link: $TIMER_LINK -> $TIMER_TARGET"
+    current_min=$START_TOTAL_MIN
+
+    # 指定されたインターバルに基づいて cron ジョブを追加
+    while [ "$current_min" -le "$END_TOTAL_MIN" ]; do
+        # 1440 分を超える場合は翌日の時間に調整
+        adjusted_min=$((current_min % 1440))
+
+        hour=$((adjusted_min / 60))
+        minute=$((adjusted_min % 60))
+
+        # 時と分をゼロ埋めでフォーマット
+        hour_fmt=$(printf "%02d" "$hour")
+        minute_fmt=$(printf "%02d" "$minute")
+
+        # cron ジョブを追加
+        echo "$minute_fmt $hour_fmt * * * $RUN_SCRIPT # PiSphere_Run_Script" >> mycron_backup
+
+        # インターバル分を加算
+        current_min=$((current_min + INTERVAL_MINUTES))
+    done
+
+    # 新しい crontab をインストール
+    crontab mycron_backup
+    rm mycron_backup mycron_temp 2>/dev/null || true
+    log "Added cron jobs for PiSphere_Run_Script."
 }
 
-# Function to reload systemd daemon and enable/start services
-reload_and_start_services() {
-    # Reload systemd daemon to recognize new unit files
-    systemctl daemon-reload
-    log "Reloaded systemd daemon."
-
-    # Enable pisphere.service and pisphere.timer to start on boot
-    systemctl enable pisphere.service
-    log "Enabled pisphere.service."
-
-    systemctl enable pisphere.timer
-    log "Enabled pisphere.timer."
-
-    # Start pisphere.service and pisphere.timer
-    systemctl start pisphere.service
-    log "Started pisphere.service."
-
-    systemctl start pisphere.timer
-    log "Started pisphere.timer."
-}
-
-# Function to get user input for capture settings
+# ユーザー入力を取得する関数
 get_user_settings() {
     echo "Please enter the capture start time (HH:MM, 24-hour format, e.g., 07:00):"
     read START_TIME_INPUT
-    # Validate input format
+    # 入力形式を検証
     while ! [[ "$START_TIME_INPUT" =~ ^([01][0-9]|2[0-3]):([0-5][0-9])$ ]]; do
         echo "Invalid format. Please enter time as HH:MM (24-hour format, e.g., 07:00):"
         read START_TIME_INPUT
@@ -241,7 +166,7 @@ get_user_settings() {
 
     echo "Please enter the capture end time (HH:MM, 24-hour format, e.g., 18:00):"
     read END_TIME_INPUT
-    # Validate input format
+    # 入力形式を検証
     while ! [[ "$END_TIME_INPUT" =~ ^([01][0-9]|2[0-3]):([0-5][0-9])$ ]]; do
         echo "Invalid format. Please enter time as HH:MM (24-hour format, e.g., 18:00):"
         read END_TIME_INPUT
@@ -250,7 +175,7 @@ get_user_settings() {
 
     echo "Please enter the capture interval in minutes (e.g., 30):"
     read INTERVAL_MINUTES_INPUT
-    # Validate input is a positive integer
+    # 正の整数であることを検証
     while ! [[ "$INTERVAL_MINUTES_INPUT" =~ ^[1-9][0-9]*$ ]]; do
         echo "Invalid input. Please enter a positive integer for minutes (e.g., 30):"
         read INTERVAL_MINUTES_INPUT
@@ -260,34 +185,35 @@ get_user_settings() {
     log "User settings - Start Time: $START_TIME, End Time: $END_TIME, Interval: $INTERVAL_MINUTES minutes"
 }
 
-# Main Execution Flow
+# メイン実行フロー
 
-# Display Logo and Welcome Message
+# スクリプトが root で実行されている場合、ユーザーとして実行するように促す
+if [ "$(id -u)" -eq 0 ]; then
+    echo "Please run this script as the target user, not with sudo."
+    exit 1
+fi
+
+# ロゴとウェルカムメッセージを表示
 display_logo
 display_welcome_message
 
-# Determine Executing User based on script's ownership
+# スクリプト所有者のユーザー名を取得
 get_script_owner
 
-# Get user settings for capture
+# ユーザーからの設定を取得
 get_user_settings
 
-# Log the EXEC_USER variable
+# 実行ユーザーをログに記録
 log "The script is being executed for user: $EXEC_USER"
 
-# Create pisphere.service from template
-create_service_file
-
-# Create pisphere.timer from template with user settings
-create_timer_file
-
-# Create run.sh from template
+# run.sh をテンプレートから作成
 create_run_script
 
-# Create symbolic links for systemd unit files
-create_symlinks
-
-# Reload systemd daemon and enable/start services
-reload_and_start_services
+# cron ジョブを作成
+create_cron_jobs
 
 log "PiSphere setup completed successfully."
+
+# 初回の run.sh を手動で実行するよう案内
+echo "Please run the run.sh script once to initialize the capture process:"
+echo "/home/$EXEC_USER/PiSphere/shs/run.sh"
