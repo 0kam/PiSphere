@@ -36,6 +36,7 @@ set_wake_alarm() {
     local wake_time_epoch=$1
     echo 0 | sudo tee /sys/class/rtc/rtc0/wakealarm # Reset wakealarm
     echo $wake_time_epoch | sudo tee /sys/class/rtc/rtc0/wakealarm
+    cat /sys/class/rtc/rtc0/wakealarm
 }
 
 # 撮影ウィンドウ内かどうかを確認
