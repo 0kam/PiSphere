@@ -56,9 +56,9 @@ The camera is designed to be powered by a small solar panel or battery and to op
 ### 1. Setting up your RaspberryPi 5
 ```
 $ uname -a
-Linux raspberrypi 6.6.51+rpt-rpi-2712 #1 SMP PREEMPT Debian 1:6.6.51-1+rpt3 (2024-10-08) aarch64 GNU/Linux
+Linux pisphere 6.12.25+rpt-rpi-2712 #1 SMP PREEMPT Debian 1:6.12.25-1+rpt1 (2025-04-30) aarch64 GNU/Linux
 ```
-I tested `PiSphere` with a RaspberryPi 5 4GB and RaspberryPi OS 64-bit (Bullseye, with desktop env).
+I tested `PiSphere` with a RaspberryPi 5 4GB and RaspberryPi OS 64-bit (Bookworm, with desktop env).
 
 The Raspberry Pi 5 can be equipped with an RTC (Real-Time Clock) battery that maintains the time even when the main power is turned off.
 `PiSphere` performs intermittent operation using the RTC to power the device only during shooting times,
@@ -71,7 +71,7 @@ enabling it to run solely on a small solar panel or battery. To enable this feat
      dtparam=rtc_bbat_vchg=3000000
      ```
 
-   - After rebooting, verify that `/sys/devices/platform/soc/soc\:rpi_rtc/rtc/rtc0/charging_voltage_min` is set to `3000000`.
+   - After rebooting, verify that `/sys/devices/platform/soc@107c000000/soc@107c000000\:rpi_rtc/rtc/rtc0/charging_voltage` is set to `3000000`.
 
 2. **Edit the EEPROM Configuration:**
 

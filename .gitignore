@@ -3,3 +3,4 @@ service/pisphere.service
 service/pisphere.timer
 __pycache__
 *.log
+test_images
