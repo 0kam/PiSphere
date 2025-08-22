@@ -25,9 +25,9 @@ class DualCamera:
         Initialize the camera objects.
         """
         self.camera0 = Picamera2(camera_num=0)
-        self.config0 = self.camera0.create_still_configuration({"size": (2592, 1944)})
+        self.config0 = self.camera0.create_still_configuration({"size": (4056, 3040)})
         self.camera1 = Picamera2(camera_num=1)
-        self.config1 = self.camera1.create_still_configuration({"size": (2592, 1944)})
+        self.config1 = self.camera1.create_still_configuration({"size": (4056, 3040)})
 
     def _capture(self, file0: str, file1: str) -> None:
         """

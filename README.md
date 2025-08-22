@@ -13,7 +13,8 @@ The camera is designed to be powered by a small solar panel or battery and to op
 - [RTC battery pack for Raspberry Pi 5](https://www.raspberrypi.com/products/rtc-battery/)
 - 2 x 150 mm CSI cable for RaspberryPi zero and 5
 - General heat sink for RaspberryPi 5
-- [2 x Arducam Ultra Wide Angle Fisheye 5MP OV5647 Camera for Raspberry Pi](https://www.uctronics.com/arducam-ultra-wide-angle-fisheye-5mp-ov5647-camera.html)
+- [2 x RaspberryPi HQ Camera (**M12 Mount**)](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)
+- [2 x 2.7mm Ultra Wide lens for RaspberryPi HQ Camera](https://www.mouser.jp/ProductDetail/Raspberry-Pi/SC0947?qs=rQFj71Wb1eVOORb%252B17NIKQ%3D%3D)
 - [2 x 60 mm Acrylic dome](https://entaniya.shop-pro.jp/?pid=183320529)
 - 2 x 60 mm General silicone gasket
 - [Waterproof Box BCAP151509G](https://www.takachi-el.co.jp/products/BCAP)
