@@ -12,18 +12,39 @@ INTERVAL_MINUTES=__INTERVAL_MINUTES__
 cd /home/$USER/PiSphere
 
 # 撮影ウィンドウ内かどうかを確認する関数
+# 撮影ウィンドウ内かどうかを確認する関数
 is_within_capture_window() {
+    # 時刻を分単位の数値に変換する関数
+    time_to_minutes() {
+        local time=$1
+        local hours=${time%:*}
+        local minutes=${time#*:}
+        echo $((hours * 60 + minutes))
+    }
+    
     current_time=$(date +%H:%M)
+    current_minutes=$(time_to_minutes "$current_time")
+    start_minutes=$(($(time_to_minutes "$START_TIME") - 1))  # 1分前から有効
+    end_minutes=$(($(time_to_minutes "$END_TIME") + 1))      # 1分後まで有効
+    
     if [[ "$START_TIME" < "$END_TIME" ]]; then
         # 撮影ウィンドウが深夜を跨がない場合
-        if [[ "$current_time" > "$START_TIME" && "$current_time" < "$END_TIME" ]]; then
+        if [[ "$current_minutes" -ge "$start_minutes" && "$current_minutes" -le "$end_minutes" ]]; then
             return 0
         else
             return 1
         fi
     else
         # 撮影ウィンドウが深夜を跨ぐ場合
-        if [[ "$current_time" > "$START_TIME" || "$current_time" < "$END_TIME" ]]; then
+        # 深夜を跨ぐ場合の調整
+        if [[ "$start_minutes" -lt 0 ]]; then
+            start_minutes=$((start_minutes + 1440))  # 24時間 = 1440分
+        fi
+        if [[ "$end_minutes" -ge 1440 ]]; then
+            end_minutes=$((end_minutes - 1440))
+        fi
+        
+        if [[ "$current_minutes" -ge "$start_minutes" || "$current_minutes" -le "$end_minutes" ]]; then
             return 0
         else
             return 1
